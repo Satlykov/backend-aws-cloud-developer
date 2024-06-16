@@ -19,4 +19,22 @@ export const products: IProduct[] = [
     description: "Product 3 description",
     price: 250.99,
   },
+  {
+    id: "4",
+    title: "Product 4",
+    description: "Product 4 description",
+    price: 99.79,
+  },
+  {
+    id: "5",
+    title: "Product 5",
+    description: "Product 5 description",
+    price: 120.89,
+  },
+  {
+    id: "6",
+    title: "Product 6",
+    description: "Product 6 description",
+    price: 250.99,
+  },
 ];
