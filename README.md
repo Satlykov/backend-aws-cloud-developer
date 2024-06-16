@@ -1,1 +1,0 @@
-# backend-aws-cloud-developer
