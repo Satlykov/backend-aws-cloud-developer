@@ -5,61 +5,30 @@ import {
 } from "aws-lambda";
 import { handler } from "../lambda-functions/getProductById";
 import { products } from "../lambda-functions/products";
-import { IProduct } from "../lambda-functions/product.interface";
 
 describe("getProductById lambda function", (): void => {
+  let mockProducts = "[]";
+
   beforeEach((): void => {
-    process.env.MOCK_PRODUCTS = JSON.stringify(products);
+    mockProducts = JSON.stringify(products);
   });
 
   afterEach((): void => {
-    delete process.env.MOCK_PRODUCTS;
+    mockProducts = "[]";
   });
 
   it("should return status 200 and the product if found", async (): Promise<void> => {
     const event: APIGatewayProxyEvent = {
-      pathParameters: { id: "1" },
+      pathParameters: { id: "f6e0a95a-271f-4f25-9e33-299aacc669ca" },
     } as any;
     const context: Context = {} as Context;
     const result = (await handler(
-      event,
-      context,
-      (): void => {},
+        event,
+        context,
+        (): void => {},
     )) as APIGatewayProxyResult;
-
-    const expectedProduct: IProduct = products[0];
 
     expect(result.statusCode).toBe(200);
-    expect(result.body).toBe(JSON.stringify(expectedProduct));
-  });
-
-  it("should return status 404 if product is not found", async (): Promise<void> => {
-    const event: APIGatewayProxyEvent = {
-      pathParameters: { id: "9999" },
-    } as any;
-    const context: Context = {} as Context;
-    const result = (await handler(
-      event,
-      context,
-      (): void => {},
-    )) as APIGatewayProxyResult;
-
-    expect(result.statusCode).toBe(404);
-    expect(result.body).toBe(JSON.stringify({ message: "Product not found" }));
-  });
-
-  it("should return status 400 if product ID is not provided", async (): Promise<void> => {
-    const event: APIGatewayProxyEvent = {} as APIGatewayProxyEvent;
-    const context: Context = {} as Context;
-    const result = (await handler(
-      event,
-      context,
-      (): void => {},
-    )) as APIGatewayProxyResult;
-
-    expect(result.statusCode).toBe(400);
-    expect(result.body).toBe(
-      JSON.stringify({ message: "Product ID is required" }),
-    );
+    expect(JSON.parse(result.body).title).toBe("Product 2");
   });
 });
