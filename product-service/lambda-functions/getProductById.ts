@@ -54,7 +54,7 @@ export const handler: APIGatewayProxyHandler = async (
       },
       body: JSON.stringify(product),
     };
-  } catch (error: any) {
-    return handleAPIGatewayError(error);
+  } catch (e: any) {
+    return handleAPIGatewayError(e);
   }
 };
