@@ -31,4 +31,4 @@ const populateTables = async () => {
     }
 };
 
-populateTables().catch(error => console.error(error));
+populateTables().catch(e => console.error(e));

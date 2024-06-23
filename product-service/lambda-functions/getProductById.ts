@@ -4,8 +4,7 @@ import {
   APIGatewayProxyResult,
 } from "aws-lambda";
 import * as AWS from "aws-sdk";
-import { IProduct } from "./product.interface";
-import { products } from "./products";
+import { IProduct, products } from "./products";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import {
   NotFoundError,
@@ -13,7 +12,7 @@ import {
   BadRequestError,
 } from "./errorHandler";
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "eu-central-1" });
 
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent,
@@ -23,12 +22,12 @@ export const handler: APIGatewayProxyHandler = async (
     let product: IProduct | undefined;
 
     if (id) {
-      product = products.find((product): boolean => product.id === id);
+      product = products.find((product: IProduct): boolean => product.id === id);
     }
 
     if (!id || !product) {
       const params: DocumentClient.GetItemInput = {
-        TableName: "products",
+        TableName: 'products',
         Key: { id },
       };
 
@@ -37,11 +36,11 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     if (!id) {
-      throw new BadRequestError("Product ID is required");
+      throw new BadRequestError();
     }
 
     if (!product) {
-      throw new NotFoundError("Product not found");
+      throw new NotFoundError();
     }
 
     return {
@@ -55,6 +54,7 @@ export const handler: APIGatewayProxyHandler = async (
       body: JSON.stringify(product),
     };
   } catch (e: any) {
+    console.error("Error retrieving product:", e);
     return handleAPIGatewayError(e);
   }
 };
