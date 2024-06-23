@@ -7,7 +7,10 @@ import { handleAPIGatewayError } from "./errorHandler";
 import { BadRequestError } from "./errorHandler";
 import { ProductInfo } from "./products";
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamodb = new AWS.DynamoDB.DocumentClient({ region: "eu-central-1" });
+
+const PRODUCT_TABLE_NAME = process.env.PRODUCT_TABLE_NAME as string ?? 'products';
+const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME as string ?? 'stock';
 
 export const handler = async (
     event: APIGatewayProxyEvent,
@@ -25,12 +28,12 @@ export const handler = async (
     console.log("Here code continue to work if no ERROR");
 
     const productParams: AWS.DynamoDB.DocumentClient.PutItemInput = {
-      TableName: 'products',
+      TableName: PRODUCT_TABLE_NAME,
       Item: { id, title, description, price },
     };
 
     const stockParams: AWS.DynamoDB.DocumentClient.PutItemInput = {
-      TableName: 'stocks',
+      TableName: STOCK_TABLE_NAME,
       Item: { product_id: id, count },
     };
 

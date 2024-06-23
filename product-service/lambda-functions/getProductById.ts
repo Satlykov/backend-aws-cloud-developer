@@ -14,6 +14,8 @@ import {
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "eu-central-1" });
 
+const PRODUCT_TABLE_NAME: string = process.env.PRODUCT_TABLE_NAME as string ?? 'products';
+
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
@@ -27,7 +29,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     if (!id || !product) {
       const params: DocumentClient.GetItemInput = {
-        TableName: 'products',
+        TableName: PRODUCT_TABLE_NAME,
         Key: { id },
       };
 

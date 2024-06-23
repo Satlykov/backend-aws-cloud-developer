@@ -5,17 +5,20 @@ AWS.config.update({ region: 'us-east-1' });
 
 const dynamodb = new AWS.DynamoDB.DocumentClient({ region: "eu-central-1" });
 
+const PRODUCT_TABLE_NAME = process.env.PRODUCT_TABLE_NAME as string ?? 'products';
+const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME as string ?? 'stock';
+
 const populateTables = async () => {
     try {
         for (const product of products) {
             await dynamodb.put({
-                TableName: 'products',
+                TableName: PRODUCT_TABLE_NAME,
                 Item: product
             }).promise();
             console.log(`Inserted product: ${JSON.stringify(product)}`);
 
             await dynamodb.put({
-                TableName: 'stocks',
+                TableName: STOCK_TABLE_NAME,
                 Item: {
                     id: product.id,
                     count: product.count,

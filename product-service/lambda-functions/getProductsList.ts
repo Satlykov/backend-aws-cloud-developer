@@ -9,13 +9,15 @@ import { IProduct } from "./products";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "eu-central-1" });
 
+const PRODUCT_TABLE_NAME: string = process.env.PRODUCT_TABLE_NAME as string ?? 'products';
+
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   console.log("Received request:", event);
 
   try {
-    const params = { TableName: 'products' };
+    const params = { TableName: PRODUCT_TABLE_NAME  };
     const result = await dynamoDb.scan(params).promise();
     const products: IProduct[] = result.Items as IProduct[];
 
