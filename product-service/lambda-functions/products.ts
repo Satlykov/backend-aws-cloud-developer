@@ -1,6 +1,14 @@
-import { IProduct } from "./product.interface";
 import { v4 } from "uuid";
 
+export interface IProduct {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  count?: number;
+}
+
+export type ProductInfo = Omit<IProduct, "id">;
 
 export const products: IProduct[] = [
   {
