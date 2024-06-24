@@ -3,7 +3,6 @@ import {
   APIGatewayProxyHandler,
   APIGatewayProxyResult,
 } from "aws-lambda";
-import * as AWS from "aws-sdk";
 import { IProduct, products } from "./products";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import {
@@ -11,8 +10,9 @@ import {
   handleAPIGatewayError,
   BadRequestError,
 } from "./errorHandler";
+import {DynamoDBClient, ScanCommand} from "@aws-sdk/client-dynamodb";
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "eu-central-1" });
+const dynamoDb = new DynamoDBClient({ region: "eu-central-1" });
 
 const PRODUCT_TABLE_NAME: string = process.env.PRODUCT_TABLE_NAME as string ?? 'products';
 
@@ -23,23 +23,19 @@ export const handler: APIGatewayProxyHandler = async (
     const id: string | undefined = event.pathParameters?.id;
     let product: IProduct | undefined;
 
-    if (id) {
-      product = products.find((product: IProduct): boolean => product.id === id);
-    }
-
-    if (!id || !product) {
-      const params: DocumentClient.GetItemInput = {
-        TableName: PRODUCT_TABLE_NAME,
-        Key: { id },
-      };
-
-      const result = await dynamoDb.get(params).promise();
-      product = result.Item as IProduct | undefined;
-    }
-
     if (!id) {
       throw new BadRequestError();
     }
+
+    const params = { TableName: PRODUCT_TABLE_NAME };
+
+    const result = await dynamoDb.send(new ScanCommand(params));
+    product = result.Items?.map(item => ({
+      description: item.description.S,
+      id: item.id.S,
+      price: parseFloat(item.price.N as string),
+      title: item.title.S
+    })).find(item => item.id === id) as IProduct | undefined;
 
     if (!product) {
       throw new NotFoundError();
