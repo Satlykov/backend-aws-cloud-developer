@@ -4,7 +4,6 @@ import {
   APIGatewayProxyResult,
 } from "aws-lambda";
 import { IProduct, products } from "./products";
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import {
   NotFoundError,
   handleAPIGatewayError,
