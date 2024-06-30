@@ -22,7 +22,8 @@ export const handler: APIGatewayProxyHandler = async (
       description: item.description.S,
       id: item.id.S,
       price: parseFloat(item.price.N as string),
-      title: item.title.S
+      title: item.title.S,
+      count: parseFloat(item.count.N as string),
     }))
 
     if (!products?.length) {
