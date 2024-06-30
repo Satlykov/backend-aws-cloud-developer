@@ -1,12 +1,12 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { products } from "./products";
+import { products } from "../lambda-functions/products";
 
 const dynamodbClient = new DynamoDBClient({ region: "eu-central-1" });
 const dynamodb = DynamoDBDocumentClient.from(dynamodbClient);
 
 const PRODUCT_TABLE_NAME = process.env.PRODUCT_TABLE_NAME ?? 'products';
-const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME ?? 'stock';
+const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME ?? 'stocks';
 
 const populateTables = async () => {
     try {
@@ -20,12 +20,12 @@ const populateTables = async () => {
             await dynamodb.send(new PutCommand({
                 TableName: STOCK_TABLE_NAME,
                 Item: {
-                    id: product.id,
+                    product_id: product.id,
                     count: product.count,
                 }
             }));
             console.log(`Inserted stock: ${JSON.stringify({
-                id: product.id,
+                product_id: product.id,
                 count: product.count,
             })}`);
         }
@@ -34,4 +34,4 @@ const populateTables = async () => {
     }
 };
 
-populateTables().catch(e => console.error(e));
+populateTables();

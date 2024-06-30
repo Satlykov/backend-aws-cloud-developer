@@ -5,7 +5,7 @@ export interface IProduct {
   title: string;
   description: string;
   price: number;
-  count?: number;
+  count: number;
 }
 
 export type ProductInfo = Omit<IProduct, "id">;
