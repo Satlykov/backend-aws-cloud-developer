@@ -31,7 +31,7 @@ export class ProductServiceStack extends cdk.Stack {
         const stocksTable = getTable("stocks", {
             tableName: "stocks",
             partitionKey: {
-                name: "products_id",
+                name: "product_id",
                 type: dynamodb.AttributeType.STRING,
             },
             billingMode: dynamodb.BillingMode.PROVISIONED,
@@ -45,6 +45,8 @@ export class ProductServiceStack extends cdk.Stack {
                 "dynamodb:GetItem",
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:TransactWriteItems"
             ],
             resources: [productsTable.tableArn, stocksTable.tableArn],
         });
@@ -107,14 +109,15 @@ export class ProductServiceStack extends cdk.Stack {
             new apigateway.LambdaIntegration(getProductsListFunction),
         );
 
-        const productResource = productsResource.addResource("{id}");
-        productResource.addMethod(
+        const productByIdResource = productsResource.addResource("{id}");
+        productByIdResource.addMethod(
             "GET",
             new apigateway.LambdaIntegration(getProductByIdFunction),
         );
 
-        productsResource.addMethod(
-            "POST",
+        const productResource = api.root.addResource("product");
+        productResource.addMethod(
+            "PUT",
             new apigateway.LambdaIntegration(createProductFunction),
         );
     }

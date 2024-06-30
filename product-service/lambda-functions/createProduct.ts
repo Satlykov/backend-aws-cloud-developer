@@ -1,15 +1,15 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { v4 as uuidv4 } from "uuid";
-import { BadRequestError, handleAPIGatewayError } from "./errorHandler";
+import { randomUUID } from "node:crypto";
+import { handleAPIGatewayError } from "./errorHandler";
 import { ProductInfo } from "./products";
 
-const dynamodbClient = new DynamoDBClient({ region: "eu-central-1" });
-const dynamodb = DynamoDBDocumentClient.from(dynamodbClient);
+const ddbClient = new DynamoDBClient({ region: "eu-central-1" });
+const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 
 const PRODUCT_TABLE_NAME = process.env.PRODUCT_TABLE_NAME ?? 'products';
-const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME ?? 'stock';
+const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME ?? 'stocks';
 
 export const handler = async (
     event: APIGatewayProxyEvent,
@@ -17,18 +17,13 @@ export const handler = async (
   console.log("Received request:", event);
 
   try {
-    const id: string = uuidv4();
-    const body: ProductInfo = JSON.parse(event.body || "{}");
-    const { title, description, price, count = 0 } = body;
-
-    if (!title || !description || !price) {
-      throw new BadRequestError();
-    }
-    console.log("Here code continue to work if no ERROR");
+    const product: ProductInfo = event.body ? JSON.parse(event.body) : {};
+    const id: string = randomUUID();
+    const { title, description, price, count = 0 } = product;
 
     const productParams = {
       TableName: PRODUCT_TABLE_NAME,
-      Item: { id, title, description, price },
+      Item: { id, title, description, price, count },
     };
 
     const stockParams = {
@@ -43,13 +38,13 @@ export const handler = async (
       ],
     };
 
-    await dynamodb.send(new TransactWriteCommand(transactParams));
+    await ddbDocClient.send(new TransactWriteCommand(transactParams));
 
     return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
         "Content-Type": "application/json",
       },
