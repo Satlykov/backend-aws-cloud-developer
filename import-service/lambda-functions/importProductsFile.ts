@@ -2,7 +2,6 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { APIGatewayProxyHandler } from "aws-lambda";
-import { createResponse } from "../utils/create-response";
 import { BUCKET_NAME, BUCKET_REGION } from "../models/const";
 
 const s3Client = new S3Client({ region: BUCKET_REGION });
@@ -13,7 +12,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     try {
         const { name } = event.queryStringParameters || {};
         if (!name) {
-            return createResponse(400, { message: "File name is required" });
+            return {
+                statusCode: 400,
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ message: "File name is required" }),
+            };
         }
 
         const command = new PutObjectCommand({
@@ -37,9 +45,18 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     } catch (e) {
         const errorMessage =
             e instanceof Error ? e.message : "Unknown error";
-        return createResponse(500, {
-            message: "Could not create a signed URL",
-            error: errorMessage,
-        });
+        return {
+            statusCode: 500,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message: "Could not create a signed URL",
+                error: errorMessage,
+            }),
+        };
     }
 };
