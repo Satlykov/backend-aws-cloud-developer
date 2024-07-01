@@ -25,7 +25,7 @@ export const handler = async (
   const s3Client = new S3Client({ region: REGION });
 
   const putObjectCommand: PutObjectCommand = new PutObjectCommand({
-    Bucket: BUCKET_NAME ?? "import-service-s3-satlykov-rustam",
+    Bucket: BUCKET_NAME,
     Key: `uploaded/${fileName}`,
   });
 

@@ -18,16 +18,11 @@ export class ImportS3Bucket {
   public readonly bucket: s3.IBucket;
 
   constructor(scope: Construct, id: string, bucketName: string) {
-    this.bucket = new s3.Bucket(scope, id, {
-      bucketName,
-      cors: [
-        {
-          allowedMethods: [s3.HttpMethods.PUT],
-          allowedOrigins: ["*"],
-          allowedHeaders: ["*"],
-        },
-      ],
-    });
+    this.bucket = s3.Bucket.fromBucketName(
+        scope,
+        "ImportServiceS3Bucket",
+        bucketName,
+    );
 
     new cr.AwsCustomResource(scope, "PutCorsConfig", {
       onCreate: {
@@ -54,7 +49,12 @@ export class ImportS3Bucket {
   private addBucketPolicies(): void {
     this.bucket.addToResourcePolicy(
       new iam.PolicyStatement({
-        actions: ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+        actions: [
+          's3:GetObject',
+          's3:PutObject',
+          's3:DeleteObject',
+          's3:CopyObject',
+        ],
         resources: [this.bucket.arnForObjects("*")],
         principals: [new iam.AnyPrincipal()],
       }),

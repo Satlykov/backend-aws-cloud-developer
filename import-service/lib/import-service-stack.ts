@@ -4,12 +4,13 @@ import { ImportS3Bucket } from "./utils/importS3Bucket.class";
 import { ImportProductsFile } from "./utils/importProductsFile.class";
 import { ImportFileParser } from "./utils/importFileParser.class";
 import { ApiGateway } from "./utils/apiGateway.class";
+import { BUCKET_NAME } from "../models/const";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const bucketName: string = "import-service-s3-satlykov-rustam";
+    const bucketName: string = BUCKET_NAME;
     const importS3Bucket = new ImportS3Bucket(
       this,
       "ImportS3Bucket",
