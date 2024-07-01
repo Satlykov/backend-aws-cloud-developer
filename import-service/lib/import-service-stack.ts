@@ -9,7 +9,8 @@ import {
     aws_s3,
 } from "aws-cdk-lib";
 import type { Construct } from "constructs";
-import { BUCKET_NAME } from "../models/const";
+
+const BUCKET_NAME = process.env.name ??  "import-service-s3-satlykov-rustam";
 
 export class ImportServiceStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {

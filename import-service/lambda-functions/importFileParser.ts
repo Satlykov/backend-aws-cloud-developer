@@ -7,8 +7,8 @@ import {
 } from "@aws-sdk/client-s3";
 import type { S3Handler } from "aws-lambda";
 import * as csv from "csv-parser";
-import { BUCKET_REGION } from "../models/const";
 
+const BUCKET_REGION = "eu-central-1";
 const s3Client = new S3Client({ region: BUCKET_REGION });
 
 export const handler: S3Handler = async (event) => {
