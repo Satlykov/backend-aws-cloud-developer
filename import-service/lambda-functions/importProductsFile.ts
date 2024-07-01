@@ -1,47 +1,36 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { createErrorResponse } from "./errorHandler";
+
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { BUCKET_NAME, REGION } from "../models/const";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { APIGatewayProxyHandler } from "aws-lambda";
+import { createResponse } from "../utils/create-response";
+import { BUCKET_NAME, BUCKET_REGION } from "../models/const";
 
-export const handler = async (
-  event: APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> => {
-  console.log("Received request:", event);
+const s3Client = new S3Client({ region: BUCKET_REGION });
 
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "*",
-    "Access-Control-Allow-Headers":
-      "Content-Type,Authorization,X-Api-Key,X-Amz-Date,X-Amz-Security-Token",
-  };
+export const handler: APIGatewayProxyHandler = async (event) => {
+    console.log("importProductsFile event", event);
 
-  const fileName: string | undefined = event.queryStringParameters?.name;
+    try {
+        const { name } = event.queryStringParameters || {};
+        if (!name) {
+            return createResponse(400, { message: "File name is required" });
+        }
 
-  if (!fileName) {
-    return createErrorResponse(400, "File name is required");
-  }
+        const command = new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: `uploaded/${name}`,
+            ContentType: "text/csv",
+        });
+        const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-  const s3Client = new S3Client({ region: REGION });
 
-  const putObjectCommand: PutObjectCommand = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: `uploaded/${fileName}`,
-  });
-
-  try {
-    const signedUrl: string = await getSignedUrl(s3Client, putObjectCommand, {
-      expiresIn: 3600,
-    });
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(signedUrl),
-    };
-  } catch (e: any) {
-    return createErrorResponse(
-      500,
-      `Could not get file from Bucket: ${e.message}`,
-    );
-  }
+        return createResponse(200, { url });
+    } catch (e) {
+        const errorMessage =
+            e instanceof Error ? e.message : "Unknown error";
+        return createResponse(500, {
+            message: "Could not create a signed URL",
+            error: errorMessage,
+        });
+    }
 };

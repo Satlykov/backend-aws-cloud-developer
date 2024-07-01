@@ -80,7 +80,7 @@ export class ImportServiceStack extends Stack {
             this,
             "ImportFileParser",
             {
-                functionName: "ShopImportFileParserLambda",
+                functionName: "ImportFileParserLambda",
                 runtime: aws_lambda.Runtime.NODEJS_18_X,
                 handler: "importFileParser.handler",
                 code: aws_lambda.Code.fromAsset("lambda-functions"),
