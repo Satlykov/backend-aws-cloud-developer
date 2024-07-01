@@ -28,8 +28,8 @@ export class ApiGateway {
 
     const deployment = new apigateway.Deployment(scope, "Deployment", { api });
 
-    api.deploymentStage = new apigateway.Stage(scope, "devStage", {
-      stageName: "dev",
+    api.deploymentStage = new apigateway.Stage(scope, "prodStage", {
+      stageName: "prod",
       deployment,
     });
   }
