@@ -1,63 +1,40 @@
 import { Construct } from "constructs";
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as cr from "aws-cdk-lib/custom-resources";
-import * as iam from "aws-cdk-lib/aws-iam";
-
-type CorsPolicy = {
-  AllowedHeaders: string[];
-  AllowedMethods: string[];
-  AllowedOrigins: string[];
-};
 
 export class ImportS3Bucket {
-  public static readonly CORS_POLICY: CorsPolicy = {
-    AllowedHeaders: ["*"],
-    AllowedMethods: ["PUT"],
-    AllowedOrigins: ["*"],
-  };
-  public readonly bucket: s3.IBucket;
+  public readonly bucket;
 
   constructor(scope: Construct, id: string, bucketName: string) {
-    this.bucket = s3.Bucket.fromBucketName(
+    this.bucket = new s3.Bucket(
         scope,
         "ImportServiceS3Bucket",
-        bucketName,
+        {
+          bucketName,
+          removalPolicy: RemovalPolicy.DESTROY,
+          autoDeleteObjects: true,
+          cors: [
+            {
+              allowedOrigins: ["*"],
+              allowedMethods: [s3.HttpMethods.PUT],
+              allowedHeaders: ["*"],
+            },
+          ],
+        }
     );
 
-    new cr.AwsCustomResource(scope, "PutCorsConfig", {
-      onCreate: {
-        service: "S3",
-        action: "putBucketCors",
-        parameters: {
-          Bucket: this.bucket.bucketName,
-          CORSConfiguration: {
-            CORSRules: [ImportS3Bucket.CORS_POLICY],
-          },
-        },
-        physicalResourceId: cr.PhysicalResourceId.of(
-          `PutCorsConfiguration-${this.bucket.bucketName}`,
-        ),
-      },
-      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-        resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
-      }),
-    });
-
-    this.addBucketPolicies();
+    this.addLifecycleRule();
   }
 
-  private addBucketPolicies(): void {
-    this.bucket.addToResourcePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          's3:GetObject',
-          's3:PutObject',
-          's3:DeleteObject',
-          's3:CopyObject',
-        ],
-        resources: [this.bucket.arnForObjects("*")],
-        principals: [new iam.AnyPrincipal()],
-      }),
-    );
+  private addLifecycleRule(): void {
+    this.bucket.addLifecycleRule({
+      prefix: "uploaded/",
+      transitions: [
+        {
+          storageClass: s3.StorageClass.INFREQUENT_ACCESS,
+          transitionAfter: Duration.days(30),
+        },
+      ],
+    });
   }
 }
