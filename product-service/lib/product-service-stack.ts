@@ -94,6 +94,16 @@ export class ProductServiceStack extends cdk.Stack {
         );
         createProductFunction.addToRolePolicy(dynamoPolicy);
 
+        const catalogBatchProcessFunction = new lambda.Function(
+            this,
+            'CatalogBatchProcessHandler',
+            {
+                runtime: lambda.Runtime.NODEJS_18_X,
+                code: lambda.Code.fromAsset("lambda-functions"),
+                handler: "catalogBatchProcess.handler",
+            }
+        )
+
         const api = new apigateway.RestApi(this, "ProductsApi", {
             restApiName: "Products Service",
             description: "This service serves products",
