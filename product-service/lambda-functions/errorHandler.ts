@@ -29,16 +29,7 @@ function createErrorResponse(
     statusCode: number,
     message: string,
 ): APIGatewayProxyResult {
-  return {
-    statusCode,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ message }),
-  };
+  return createErrorResponse(statusCode, message);
 }
 
 export class NotFoundError extends Error {
