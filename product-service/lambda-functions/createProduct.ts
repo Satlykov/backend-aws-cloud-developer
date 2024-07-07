@@ -4,7 +4,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { randomUUID } from "node:crypto";
 import {BadRequestError, handleAPIGatewayError} from "./errorHandler";
 import { ProductInfo } from "./products";
-import {createResponse} from "../utils/create-response";
 
 const ddbClient = new DynamoDBClient({ region: "eu-central-1" });
 const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
@@ -45,7 +44,16 @@ export const handler = async (
 
     await ddbDocClient.send(new TransactWriteCommand(transactParams));
 
-    return createResponse(200, { message: "Product created successfully" })
+    return ({
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods":  "GET, POST, PUT, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: "Product created successfully" }),
+    })
   } catch (e: any) {
     console.error("Error creating product:", e);
     return handleAPIGatewayError(e);

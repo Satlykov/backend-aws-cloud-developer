@@ -10,7 +10,6 @@ import {
   BadRequestError,
 } from "./errorHandler";
 import {DynamoDBClient, ScanCommand} from "@aws-sdk/client-dynamodb";
-import {createResponse} from "../utils/create-response";
 
 const dynamoDb = new DynamoDBClient({ region: "eu-central-1" });
 
@@ -42,7 +41,16 @@ export const handler: APIGatewayProxyHandler = async (
       throw new NotFoundError();
     }
 
-    return createResponse(200, product);
+    return ({
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods":  "GET, POST, PUT, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(product),
+    })
   } catch (e: any) {
     console.error("Error retrieving product:", e);
     return handleAPIGatewayError(e);
