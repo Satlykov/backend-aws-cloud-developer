@@ -6,7 +6,7 @@ import {
     aws_apigateway,
     aws_lambda,
     aws_lambda_event_sources,
-    aws_s3,
+    aws_s3, aws_sqs,
 } from "aws-cdk-lib";
 import type { Construct } from "constructs";
 
@@ -15,6 +15,11 @@ const BUCKET_NAME = process.env.name ??  "import-service-s3-satlykov-rustam";
 export class ImportServiceStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
+
+        const catalogItemsQueue = new aws_sqs.Queue(this, 'catalogItemsQueue', {
+            visibilityTimeout:  Duration.seconds(300),
+            receiveMessageWaitTime: Duration.seconds(20)
+        })
 
         const bucket = new aws_s3.Bucket(
             this,
@@ -53,6 +58,7 @@ export class ImportServiceStack extends Stack {
                 environment: {
                     BUCKET_NAME: bucket.bucketName,
                     BUCKET_REGION: this.region,
+                    CATALOG_ITEMS_QUEUE_URL: catalogItemsQueue.queueUrl
                 },
             },
         );
@@ -87,10 +93,12 @@ export class ImportServiceStack extends Stack {
                 code: aws_lambda.Code.fromAsset("lambda-functions"),
                 environment: {
                     BUCKET_REGION: this.region,
+                    CATALOG_ITEMS_QUEUE_URL: catalogItemsQueue.queueUrl,
                 },
             },
         );
         bucket.grantReadWrite(importFileParserLambda);
+        catalogItemsQueue.grantSendMessages(importFileParserLambda);
         bucket.grantDelete(importFileParserLambda);
 
         const s3EventSource = new aws_lambda_event_sources.S3EventSource(bucket, {
