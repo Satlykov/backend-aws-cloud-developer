@@ -8,7 +8,7 @@ import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 
 const dynamoDb = new DynamoDBClient({ region: "eu-central-1" });
 
-const PRODUCT_TABLE_NAME: string = process.env.PRODUCT_TABLE_NAME as string ?? 'products';
+const PRODUCT_TABLE_NAME: string = process.env.PRODUCT_TABLE_NAME ?? 'products';
 
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent,
@@ -30,7 +30,7 @@ export const handler: APIGatewayProxyHandler = async (
       throw new NotFoundError();
     }
 
-    return ({
+    return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -39,7 +39,7 @@ export const handler: APIGatewayProxyHandler = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify(products),
-    })
+    }
   } catch (e: any) {
     console.error("Error retrieving products list:", e);
     return handleAPIGatewayError(e);

@@ -44,7 +44,7 @@ export const handler = async (
 
     await ddbDocClient.send(new TransactWriteCommand(transactParams));
 
-    return ({
+    return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -53,7 +53,7 @@ export const handler = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ message: "Product created successfully" }),
-    })
+    }
   } catch (e: any) {
     console.error("Error creating product:", e);
     return handleAPIGatewayError(e);

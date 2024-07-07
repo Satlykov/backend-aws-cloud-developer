@@ -41,7 +41,7 @@ export const handler: APIGatewayProxyHandler = async (
       throw new NotFoundError();
     }
 
-    return ({
+    return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -50,7 +50,7 @@ export const handler: APIGatewayProxyHandler = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify(product),
-    })
+    }
   } catch (e: any) {
     console.error("Error retrieving product:", e);
     return handleAPIGatewayError(e);
