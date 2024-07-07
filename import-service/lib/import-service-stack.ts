@@ -1,3 +1,4 @@
+import * as cdk from "aws-cdk-lib";
 import {
     Duration,
     RemovalPolicy,
@@ -13,6 +14,8 @@ import type { Construct } from "constructs";
 const BUCKET_NAME = process.env.name ??  "import-service-s3-satlykov-rustam";
 
 export class ImportServiceStack extends Stack {
+    public readonly catalogItemsQueueArn: string;
+
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
 
@@ -20,6 +23,12 @@ export class ImportServiceStack extends Stack {
             visibilityTimeout:  Duration.seconds(300),
             receiveMessageWaitTime: Duration.seconds(20)
         })
+
+        this.catalogItemsQueueArn = catalogItemsQueue.queueArn;
+        new cdk.CfnOutput(this, 'CatalogItemsQueueArnOutput', {
+            value: this.catalogItemsQueueArn,
+            exportName: 'CatalogItemsQueueArn',
+        });
 
         const bucket = new aws_s3.Bucket(
             this,

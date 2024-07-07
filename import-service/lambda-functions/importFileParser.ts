@@ -16,6 +16,7 @@ const sqsClient = new SQSClient({ region: BUCKET_REGION });
 
 export const handler: S3Handler = async (event) => {
     console.log("importFileParser event", event);
+    console.log('Queue URL:', QUEUE_URL);
 
     for (const record of event.Records) {
         const { bucket, object } = record.s3;

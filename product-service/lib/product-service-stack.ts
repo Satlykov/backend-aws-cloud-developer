@@ -4,6 +4,11 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+
 
 export class ProductServiceStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -50,6 +55,28 @@ export class ProductServiceStack extends cdk.Stack {
             ],
             resources: [productsTable.tableArn, stocksTable.tableArn],
         });
+
+        const catalogItemsQueueArn = cdk.Fn.importValue('CatalogItemsQueueArn');
+        const catalogItemsQueue = sqs.Queue.fromQueueArn(this, 'ImportedCatalogItemsQueue', catalogItemsQueueArn);
+
+        const createProductTopic = new sns.Topic(this, 'CreateProductTopic', {
+            displayName: 'Create Product Topic'
+        });
+
+        const topicArn = createProductTopic.topicArn;
+        new cdk.CfnOutput(this, 'CreateProductTopicArn', {
+            value: topicArn,
+            exportName: 'CreateProductTopicArn',
+        });
+
+        createProductTopic.addSubscription(new subs.EmailSubscription('rustam.satlykov@proton.me', {
+            filterPolicy: {
+                price: sns.SubscriptionFilter.numericFilter({
+                    between: { start: 1, stop: 101 },
+                }),
+            },
+        }));
+        createProductTopic.addSubscription(new subs.EmailSubscription('satlikov.rustam.mail@gmail.com'));
 
         const getProductsListFunction = new lambda.Function(
             this,
@@ -101,8 +128,21 @@ export class ProductServiceStack extends cdk.Stack {
                 runtime: lambda.Runtime.NODEJS_18_X,
                 code: lambda.Code.fromAsset("lambda-functions"),
                 handler: "catalogBatchProcess.handler",
+                environment: {
+                    PRODUCTS_TABLE_NAME: productsTable.tableName,
+                    STOCKS_TABLE_NAME: stocksTable.tableName,
+                    SNS_TOPIC_ARN: createProductTopic.topicArn
+                },
             }
         )
+        productsTable.grantWriteData(catalogBatchProcessFunction);
+        stocksTable.grantWriteData(catalogBatchProcessFunction);
+        createProductTopic.grantPublish(catalogBatchProcessFunction);
+
+        catalogBatchProcessFunction.addEventSource(
+            new SqsEventSource(catalogItemsQueue, {
+                batchSize: 5
+            }));
 
         const api = new apigateway.RestApi(this, "ProductsApi", {
             restApiName: "Products Service",
