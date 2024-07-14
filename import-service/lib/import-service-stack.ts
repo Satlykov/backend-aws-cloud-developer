@@ -10,6 +10,7 @@ import {
     aws_s3, aws_sqs, aws_sns_subscriptions, aws_sns, aws_dynamodb,
 } from "aws-cdk-lib";
 import type { Construct } from "constructs";
+import {TokenAuthorizer} from "aws-cdk-lib/aws-apigateway";
 
 const BUCKET_NAME = process.env.name ??  "import-service-s3-satlykov-rustam";
 const PRODUCT_TABLE_NAME = 'products';
@@ -95,6 +96,21 @@ export class ImportServiceStack extends Stack {
             ],
         });
 
+        const basicAuthorizerLambda = aws_lambda.Function.fromFunctionName(
+            this,
+            'BasicAuthorizerHandler',
+            'BasicAuthorizerHandler',
+        );
+        const basicTokenAuthorizer = new TokenAuthorizer(
+            this,
+            "BasicTokenAuthorizer",
+            {
+                authorizerName: "BasicTokenAuthorizer",
+                handler: basicAuthorizerLambda,
+                identitySource: "method.request.header.Authorization",
+            },
+        );
+
         const importProductsFileLambda = new aws_lambda.Function(
             this,
             "ImportProductsFileLambda",
@@ -117,6 +133,31 @@ export class ImportServiceStack extends Stack {
             "ImportServiceApi",
             {
                 restApiName: "ImportServiceApi",
+                defaultCorsPreflightOptions: {
+                    allowOrigins: aws_apigateway.Cors.ALL_ORIGINS,
+                    allowMethods: aws_apigateway.Cors.ALL_METHODS,
+                    allowHeaders: aws_apigateway.Cors.DEFAULT_HEADERS,
+                },
+            },
+        );
+        api.addGatewayResponse(
+            "ImportServiceResponseUnauthorized",
+            {
+                type: aws_apigateway.ResponseType.UNAUTHORIZED,
+                responseHeaders: {
+                    "Access-Control-Allow-Origin": "'*'",
+                    "Content-Type": "'application/json'",
+                },
+            },
+        );
+        api.addGatewayResponse(
+            "ImportServiceResponseDefaultForbidden",
+            {
+                type: aws_apigateway.ResponseType.ACCESS_DENIED,
+                responseHeaders: {
+                    "Access-Control-Allow-Origin": "'*'",
+                    "Content-Type": "'application/json'",
+                },
             },
         );
 
@@ -128,6 +169,8 @@ export class ImportServiceStack extends Stack {
                 requestParameters: {
                     "method.request.querystring.name": true,
                 },
+                authorizer: basicTokenAuthorizer,
+                authorizationType: aws_apigateway.AuthorizationType.CUSTOM,
             },
         );
 
