@@ -7,8 +7,6 @@ export class AuthorizationServiceStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        // Lambdas configuration
-
         const USER_NAME = process.env.USER_NAME as string;
         const USER_PASSWORD = process.env.USER_PASSWORD as string;
 
