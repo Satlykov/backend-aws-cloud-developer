@@ -1,4 +1,3 @@
-import * as cdk from "aws-cdk-lib";
 import {
     Duration,
     RemovalPolicy,
