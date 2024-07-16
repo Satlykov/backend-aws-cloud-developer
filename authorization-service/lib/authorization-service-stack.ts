@@ -7,8 +7,8 @@ export class AuthorizationServiceStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        const USER_NAME = process.env.USER_NAME as string;
-        const USER_PASSWORD = process.env.USER_PASSWORD as string;
+        const USER_NAME_ENV = process.env.USER_NAME as string;
+        const USER_PASSWORD_ENV = process.env.USER_PASSWORD as string;
 
         const basicAuthorizer = new lambda.Function(
             this,
@@ -19,7 +19,8 @@ export class AuthorizationServiceStack extends cdk.Stack {
                 code: lambda.Code.fromAsset("lambda-functions"),
                 handler: "basic-authorizer.handler",
                 environment: {
-                    [USER_NAME]: USER_PASSWORD,
+                    [USER_NAME_ENV]: USER_PASSWORD_ENV,
+                    USER_NAME: USER_NAME_ENV,
                 },
             },
         );

@@ -21,10 +21,12 @@ export const handler = async (
     const decodedCredentials = Buffer.from(encodedCredentials, "base64").toString(
         "utf-8",
     );
+
     const [username, password] = decodedCredentials.split("=");
+    const expectedUsername = process.env['USER_NAME'];
     const expectedPassword = process.env[username];
 
-    if (password !== expectedPassword) {
+    if (password !== expectedPassword || username !== expectedUsername) {
         effect = "Deny";
     }
 
